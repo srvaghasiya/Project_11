@@ -1,5 +1,92 @@
 #include"lcd_driver.h"
 
+//type in both lines of lcd
+void simple_lcd(char *str1,char *str2)
+{
+        ClrLcd();
+        lcdLoc(LINE1);
+        typeln(str1);
+        lcdLoc(LINE2);
+        typeln(str2);
+}
+
+// write in specific line of lcd
+void line_lcd(char line,char *str)
+{
+	int len;
+	char str1[17];
+        lcdLoc(line);
+        typeln("                ");
+	len = strlen(str);
+	if(len<=16)
+        {
+		lcdLoc(line);
+        	typeln(str);
+	}
+	else
+	{
+		for(int i=0;i<len-15;i++)
+		{
+			strncpy(str1,str+i,16);
+			str1[16]='\0';
+			lcdLoc(line);
+			typeln(str1);
+			usleep(400000);
+		}
+	}
+}
+
+
+// scroll on screen
+void lcd_scroll(char *str1,char *str2,int flg)
+{
+        char str_up[17];
+        char str_down[17];
+        int i;
+        memset(str_up,' ',16);
+        memset(str_down,' ',16);
+
+        str_up[16]='\0';
+        str_down[16]='\0';
+
+        ClrLcd();
+
+        for(i=0;i<16;i++)
+        {
+               memset(str_up,' ',16);
+               memset(str_down,' ',16);
+               memcpy(str_up,str1+15-i,i+1);
+               memcpy(str_down+15-i,str2,i+1);
+               lcdLoc(LINE1);
+               typeln(str_up);
+               lcdLoc(LINE2);
+               typeln(str_down);
+               usleep(LCD_DELAY); 
+        }
+
+        if(flg == 1)
+        {
+        
+                for(i=0;i<5;i++)
+                {
+                        ClrLcd();
+                        usleep(LCD_DELAY);
+                        lcdLoc(LINE1);  
+                        typeln(str_up);
+                        lcdLoc(LINE2);
+                        typeln(str_down);
+                        usleep(LCD_DELAY); 
+                }
+        
+                sleep(2);
+        }
+        else if(flg==0)
+        {
+                sleep(2);
+        }
+        
+}
+
 // float to string
 void typeFloat(float myFloat)
 {

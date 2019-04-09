@@ -4,10 +4,24 @@
 const uint8 r[4]={4,17,27,22};
 const uint8 c[4]={10,9,11,5};
 
+uint8 abc=128;
+
+void keypadIsr(void)
+{
+	uint8 temp;
+	printf("in ISR\n");
+//	temp = keyscan();
+	if(abc == 128)
+	{
+		abc = temp;	
+	}
+//	printf("%c\n",abc);
+}
+
 void init_pins()
 {
 	uint8 i;
-
+	wiringPiSetup();
 	wiringPiSetupGpio();
 	
 	/* row init */
@@ -22,6 +36,7 @@ void init_pins()
 	{
 		pinMode(c[i],INPUT);
 		pullUpDnControl(c[i],PUD_UP);
+		wiringPiISR(c[i],INT_EDGE_FALLING,&keypadIsr);
 	}
 }
 /*

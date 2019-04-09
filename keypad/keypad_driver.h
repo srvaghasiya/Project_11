@@ -1,5 +1,5 @@
-#ifndef KEYPAD_DRIVER
-#define KEYPAD_DRIVER
+#ifndef _KEYPAD_DRIVER_H_
+#define _KEYPAD_DRIVER_H_
 
 #include<stdint.h>
 #include<wiringPi.h>
@@ -15,5 +15,7 @@ extern uint8 keyscan(void);
 extern uint8 keyscan2(void);
 extern uint8 get_row(void);
 extern uint8 get_col(void);
+
+extern uint8 abc;
 
 #endif
