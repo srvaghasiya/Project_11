@@ -20,6 +20,7 @@ extern volatile long long cnt;
 
 extern float rotorRPM;
 extern int rotorStopCnt;
+extern char rotorLedEnableFlag;
 
 extern pthread_mutex_t rotorMutex_rpm;
 extern pthread_cond_t rotorCond_start;

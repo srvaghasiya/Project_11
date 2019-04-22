@@ -6,18 +6,6 @@ const uint8 c[4]={10,9,11,5};
 
 uint8 abc=128;
 
-void keypadIsr(void)
-{
-	uint8 temp;
-	printf("in ISR\n");
-//	temp = keyscan();
-	if(abc == 128)
-	{
-		abc = temp;	
-	}
-//	printf("%c\n",abc);
-}
-
 void init_pins()
 {
 	uint8 i;
@@ -36,17 +24,9 @@ void init_pins()
 	{
 		pinMode(c[i],INPUT);
 		pullUpDnControl(c[i],PUD_UP);
-		wiringPiISR(c[i],INT_EDGE_FALLING,&keypadIsr);
 	}
 }
-/*
-const uint8 keypad_lut[4][4]={
-{1,2,3,4},
-{5,6,7,8},
-{9,10,11,12},
-{13,14,15,16}
-};
-*/
+
 const uint8 keypad_lut[4][4]={
 {'1','2','3','A'},
 {'4','5','6','B'},
@@ -84,6 +64,7 @@ uint8 keyscan(void)
 {
 	volatile uint8 i,row=5,col=5;
 	static uint8 state;
+
 	init_pins();
 
 	do
@@ -108,11 +89,11 @@ uint8 keyscan(void)
 	}
 
 	while(colscan() < 4);
-
-//	printf("row: %d \tcol :%d\n",row,col);
 	
 	if(row<4 && col<4)
 		state = keypad_lut[row][col];
-	
+
+	printf("%c\n",state);
+
 	return state;
 }

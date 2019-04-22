@@ -31,7 +31,7 @@ void line_lcd(char line,char *str)
 			str1[16]='\0';
 			lcdLoc(line);
 			typeln(str1);
-			usleep(400000);
+			usleep(370000);
 		}
 	}
 }

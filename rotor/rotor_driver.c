@@ -11,6 +11,8 @@ float rotorRPM;
 
 int rotorStopCnt;
 
+char rotorLedEnableFlag = 0;
+
 pthread_mutex_t rotorMutex_rpm;
 pthread_cond_t rotorCond_start;
 pthread_cond_t rotorCond_stop;
@@ -23,76 +25,90 @@ void print()
 void rotorCntIsr0(void)
 {
 	rotorPrevPos = rotorCurPos;
-	rotorCurPos = 1;
+//	rotorCurPos = 1;
+	rotorCurPos = 5;
+	printf("pos: %d\n",rotorCurPos);
 	cnt++;
-	shrLedOut(noOfPlayers,rotorCurPos);
-//	print();
+	if(!rotorLedEnableFlag)
+		shrLedOut(noOfPlayers,rotorCurPos);
 }
 
 void rotorCntIsr1(void)
 {
 	rotorPrevPos = rotorCurPos;
-	rotorCurPos = 2;
+//	rotorCurPos = 2;
+	rotorCurPos = 6;
+	printf("pos: %d\n",rotorCurPos);
 	cnt++;
-	shrLedOut(noOfPlayers,rotorCurPos);
-//	print();
+	if(!rotorLedEnableFlag)
+		shrLedOut(noOfPlayers,rotorCurPos);
 }
 
 void rotorCntIsr2(void)
 {
 	rotorPrevPos = rotorCurPos;
-	rotorCurPos = 3;
+//	rotorCurPos = 3;
+	rotorCurPos = 7;
+	printf("pos: %d\n",rotorCurPos);
 	cnt++;
-	shrLedOut(noOfPlayers,rotorCurPos);
-//	print();
+	if(!rotorLedEnableFlag)
+		shrLedOut(noOfPlayers,rotorCurPos);
 }
 
 void rotorCntIsr3(void)
 {
 	rotorPrevPos = rotorCurPos;
-	rotorCurPos = 4;
+//	rotorCurPos = 4;
+	rotorCurPos = 8;
+	printf("pos: %d\n",rotorCurPos);
 	cnt++;
-	shrLedOut(noOfPlayers,rotorCurPos);
-//	print();
+	if(!rotorLedEnableFlag)
+		shrLedOut(noOfPlayers,rotorCurPos);
 }
 
 void rotorCntIsr4(void)
 {
 	rotorPrevPos = rotorCurPos;
-	rotorCurPos = 5;
+//	rotorCurPos = 5;
+	rotorCurPos = 1;
+	printf("pos: %d\n",rotorCurPos);
 	cnt++;
-	shrLedOut(noOfPlayers,rotorCurPos);
-//	print();
+	if(!rotorLedEnableFlag)
+		shrLedOut(noOfPlayers,rotorCurPos);
 }
 
 void rotorCntIsr5(void)
 {
 	rotorPrevPos = rotorCurPos;
-	rotorCurPos = 6;
+//	rotorCurPos = 6;
+	rotorCurPos = 2;
+	printf("pos: %d\n",rotorCurPos);
 	cnt++;
-	shrLedOut(noOfPlayers,rotorCurPos);
-//	print();
+	if(!rotorLedEnableFlag)
+		shrLedOut(noOfPlayers,rotorCurPos);
 }
 
 void rotorCntIsr6(void)
 {
 	rotorPrevPos = rotorCurPos;
-	rotorCurPos = 7;
+//	rotorCurPos = 7;
+	rotorCurPos = 3;
+	printf("pos: %d\n",rotorCurPos);
 	cnt++;
-	shrLedOut(noOfPlayers,rotorCurPos);
-//	print();
+	if(!rotorLedEnableFlag)
+		shrLedOut(noOfPlayers,rotorCurPos);
 }
 
 void rotorCntIsr7(void)
 {
 	rotorPrevPos = rotorCurPos;
-	rotorCurPos = 8;
+//	rotorCurPos = 8;
+	rotorCurPos = 4;
+	printf("pos: %d\n",rotorCurPos);
 	cnt++;
-	shrLedOut(noOfPlayers,rotorCurPos);
-//	print();
+	if(!rotorLedEnableFlag)
+		shrLedOut(noOfPlayers,rotorCurPos);
 }
-
-//void (*rotorCntIsr[8])(void) = {rotorCntIsr0,rotorCntIsr1,rotorCntIsr2,rotorCntIsr3,rotorCntIsr4,rotorCntIsr5,rotorCntIsr6,rotorCntIsr7};
 
 
 int rotorReedPinsInit()
@@ -103,16 +119,15 @@ int rotorReedPinsInit()
 	for(i=0;i<8;i++)
 	{
 		pullUpDnControl(rotorReedPins[i],PUD_UP);
-//		wiringPiISR(rotorReedPins[i],INT_EDGE_FALLING,rotorCntIsr[i]);
 	}
-		wiringPiISR(rotorReedPins[0],INT_EDGE_FALLING,&rotorCntIsr0);
-		wiringPiISR(rotorReedPins[1],INT_EDGE_FALLING,&rotorCntIsr1);
-		wiringPiISR(rotorReedPins[2],INT_EDGE_FALLING,&rotorCntIsr2);
-		wiringPiISR(rotorReedPins[3],INT_EDGE_FALLING,&rotorCntIsr3);
-		wiringPiISR(rotorReedPins[4],INT_EDGE_FALLING,&rotorCntIsr4);
-		wiringPiISR(rotorReedPins[5],INT_EDGE_FALLING,&rotorCntIsr5);
-		wiringPiISR(rotorReedPins[6],INT_EDGE_FALLING,&rotorCntIsr6);
-		wiringPiISR(rotorReedPins[7],INT_EDGE_FALLING,&rotorCntIsr7);
+	wiringPiISR(rotorReedPins[0],INT_EDGE_FALLING,&rotorCntIsr0);
+	wiringPiISR(rotorReedPins[1],INT_EDGE_FALLING,&rotorCntIsr1);
+	wiringPiISR(rotorReedPins[2],INT_EDGE_FALLING,&rotorCntIsr2);
+	wiringPiISR(rotorReedPins[3],INT_EDGE_FALLING,&rotorCntIsr3);
+	wiringPiISR(rotorReedPins[4],INT_EDGE_FALLING,&rotorCntIsr4);
+	wiringPiISR(rotorReedPins[5],INT_EDGE_FALLING,&rotorCntIsr5);
+	wiringPiISR(rotorReedPins[6],INT_EDGE_FALLING,&rotorCntIsr6);
+	wiringPiISR(rotorReedPins[7],INT_EDGE_FALLING,&rotorCntIsr7);
 
 }
 
@@ -131,7 +146,6 @@ static float rotorRpmCnt()
 }
 
 void *rotor(void *arg)
-//int main()
 {
 	int startCntFlag;
 	rotorReedPinsInit();
@@ -141,18 +155,8 @@ void *rotor(void *arg)
 	{
 
 		pthread_mutex_lock(&rotorMutex_rpm);
-//		rotorRPM = rotorRpmCnt();
-//
-//		testing purpose only remove this lines once testing done.
-		printf("Enter RPM for testing : ");
-		scanf("%f",&rotorRPM);
-		printf("rotorStopCnt : %d\n",rotorStopCnt);
-		if(rotorRPM != 0.0)
-		{
-			printf("Enter cur pos:");
-			scanf("%d",&rotorCurPos);
-		}
-
+		rotorRPM = rotorRpmCnt();
+		
 		if(startCntFlag == 1)
 		{
 			if(rotorRPM == 0.0)
@@ -173,18 +177,14 @@ void *rotor(void *arg)
 			startCntFlag = 1;
 			pthread_cond_signal(&rotorCond_start);
 		}
-//for testing its 2 make 20 for real
-		if(rotorStopCnt == 2)
+		
+		if(rotorStopCnt == 20)
 		{
 			startCntFlag = 0;
 			pthread_cond_signal(&rotorCond_stop);
-			printf("after signal..\n");
 			usleep(SEC_TO_MICROSEC(ROTOR_DELAY_SEC));
-//			pthread_exit(0);
 		}
 
-		printf("rpm : %f\n",rotorRPM);  //for testing purpose
-		printf("cur pos : %d\n",rotorCurPos); //for testing purpose
 		usleep(SEC_TO_MICROSEC(ROTOR_DELAY_SEC));
 			
 	}

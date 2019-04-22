@@ -1,6 +1,8 @@
 #include"app.h"
 #define DELAY 400000
+#define KEYPAD_DELAY 450000
 //#define TEST
+
 
 char *truth[37]  = 
 {
@@ -98,6 +100,18 @@ char appLedBlinkFlag = 0;
 
 pthread_mutex_t appMutex,appMutex1;
 
+void voiceOutput(char *str,char c)
+{
+	char voiceStr[400] = "pico2wave -w ./sound/temp.wav \"";
+	strcat(voiceStr,str);
+	if(c == 0)
+		strcat(voiceStr," \" && aplay ./sound/temp.wav");
+	else
+
+		strcat(voiceStr," \" && aplay ./sound/temp.wav &");
+	system(voiceStr);
+}
+
 void greeting()
 {
 	lcd_scroll("TRUTH  O     >>>","<<<     R   DARE",1);
@@ -110,10 +124,11 @@ char manOrauto()
 {
 	char c;
 	simple_lcd("  select mode   ","A:Wifi B:Offline");
+	voiceOutput("Select mode of game",1);
 	do
 	{
 		c = keyscan();
-		usleep(500000);
+		usleep(KEYPAD_DELAY);
 	}while(!(c=='A' || c == 'B'));
 	return c;
 
@@ -124,11 +139,12 @@ char getPlayers()
 	char c;
 
 	simple_lcd("No. of Players ","   8 or 4 or 2  ");
+	voiceOutput("Select Number of Players",1);
 
 	do
 	{
 		c = keyscan();
-		usleep(500000);
+		usleep(KEYPAD_DELAY);
 	}while(!(c=='2' || c=='4' || c=='8'));
 	c = c-'0';
 	return c;
@@ -138,9 +154,12 @@ void getPhoneNumbers()
 {
 	char i,cnt,c,t;
 	char str[16];
+	char str1[100];
 	line_lcd(LINE1,"Enter Phone No: ");
 	for(i=0;i<noOfPlayers;i++)
 	{
+		sprintf(str1,"Enter phone number for player %d",i+1);
+		voiceOutput(str1,1);
 		for(cnt=0;cnt<11;cnt++)
 		{
 			sprintf(str,"P%d: %s",i+1,phoneNumbers[i]);
@@ -148,17 +167,19 @@ void getPhoneNumbers()
 			if(cnt==10)
 			{
 				printf("here in getPhone number if\n");
+				voiceOutput("Ae for Save B for re-enter",1);
 				line_lcd(LINE1,"A:Save  B:Cancel");
 				do
 				{
 					t = keyscan();
-					usleep(500000);
+					usleep(KEYPAD_DELAY);
 				}while(!(t=='A' || t=='B'));
 
 				if(t == 'A')
 				{	
 					line_lcd(LINE2,"                ");
 					line_lcd(LINE2,"SAVED..!!");
+					voiceOutput("saved",0);
 					usleep(3*DELAY); 
 				}
 				else if(t == 'B')
@@ -167,6 +188,7 @@ void getPhoneNumbers()
 					i--;
 					line_lcd(LINE2,"                ");
 					line_lcd(LINE2,"CANCELLED..!!");
+					voiceOutput("Cancelled",0);
 					usleep(3*DELAY); 
 				}
 				else
@@ -180,22 +202,19 @@ void getPhoneNumbers()
 			do
 			{
 				phoneNumbers[i][cnt] = keyscan();
-				usleep(500000);
-				printf("%s\n",phoneNumbers[i]);
+				usleep(KEYPAD_DELAY);
 			}while(!(phoneNumbers[i][cnt]>='0' && phoneNumbers[i][cnt]<='9'));
 		}
 	}
 
 }
 
-//#ifdef TEST
 void printPh()
 {
 	int i;
 	for(i=0;i<noOfPlayers;i++)
 		printf("%s\n",phoneNumbers[i]);
 }
-//#endif
 
 void *lcd_spin_start(void *arg)
 {
@@ -205,6 +224,9 @@ void *lcd_spin_start(void *arg)
 		pthread_cond_wait(&rotorCond_start,&rotorMutex_rpm);
 	}
 	line_lcd(LINE2,"Spin Started...");
+	system("play -q sound/spinning.mp3 &");
+	rotorLedEnableFlag = 0;
+	rotorStopCnt = 0;
 	pthread_mutex_unlock(&rotorMutex_rpm);
 }
 
@@ -218,6 +240,11 @@ void *lcd_spin_stop(void *arg)
 	appSpinFlag = 2;
 	line_lcd(LINE2,"Spinner Stopped.");
 	rotorStopCnt = 0;
+	rotorLedEnableFlag = 1;
+	system("pkill play");
+
+//	usleep(1000);
+	system("play -q sound/stop2.mp3");
 	pthread_mutex_unlock(&rotorMutex_rpm);
 }
 
@@ -226,7 +253,6 @@ void *lcd_question_gen(void *arg)
 	char flag = 0;
 	while(1)
 	{
-		printf("here in que gen\n");
 		pthread_mutex_lock(&appMutex);
 		if(appQueFlag == 1)
 		{
@@ -239,13 +265,11 @@ void *lcd_question_gen(void *arg)
 		if(flag == 0)
 		{
 			line_lcd(LINE2,"A: Generate Que");
-			printf("here in que gen 1\n");
 			flag = 1;
 		}
 		else
 		{
 			line_lcd(LINE2,"B: Ask Manually");
-			printf("here in que gen 0\n");
 			flag = 0;
 		}
 		sleep(1);
@@ -290,6 +314,8 @@ void *lcd_timer(void *arg)
 	
 	while(time--)
 	{
+		sprintf(str,"%d",time+1);
+		voiceOutput(str,1);
 		sprintf(str,"Time left : %d",time+1);
 		line_lcd(LINE2,str);
 		usleep(866667);
@@ -351,6 +377,7 @@ void game_begin()
 	pthread_t pid_lcd_new_round;
 	pthread_t pid_lcd_timer;
 	char str[16];
+	char str1[100];
 	int rndCnt=1;
 	int temp;
 	char lieDetectorAns;
@@ -358,16 +385,24 @@ void game_begin()
 
 	srand(getpid());
 
+
 	line_lcd(LINE1,"Game begins...");
+	voiceOutput("Game Begins",1);
 	line_lcd(LINE2,"              ");
-	sleep(2);
+	sleep(1);
 
 	pthread_create(&pid_rotor,NULL,&rotor,NULL);
 	while(1)
 	{
 		sprintf(str,"Round : %d",rndCnt);
+		line_lcd(LINE2,"            ");
 		line_lcd(LINE1,str);
+		voiceOutput(str,0);
+
 		line_lcd(LINE2,"Spin Bottle...");
+		voiceOutput("Spin the Bottle",1);
+		rotorStopCnt = 0;
+
 
 		pthread_create(&pid_lcd_spin_start,NULL,&lcd_spin_start,NULL);
 		pthread_create(&pid_lcd_spin_stop,NULL,&lcd_spin_stop,NULL);
@@ -386,7 +421,6 @@ void game_begin()
 			{
 				temp_cp = temp_sp+4;
 			}
-			printf("sp : %d\tcp : %d\n",temp_sp,temp_cp);
 		}
 		else if(noOfPlayers == 4)
 		{
@@ -416,7 +450,6 @@ void game_begin()
 					break;
 
 			}
-			printf("sp : %d\tcp: %d\n",temp_sp,temp_cp);
 		}
 		else if(noOfPlayers == 2)
 		{
@@ -440,7 +473,6 @@ void game_begin()
 					break;
 
 			}
-/*for testing */			printf("sp : %d\tcp: %d\n",temp_sp,temp_cp);
 		}
 		else
 		{
@@ -452,29 +484,40 @@ void game_begin()
 		sprintf(str,"P%d ask..",temp_cp);
 		line_lcd(LINE2,str);
 
-		sleep(2);
+		sprintf(str1,"Player %d you can ask truth or dare to player %d",temp_cp,temp_sp);
+		voiceOutput(str1,0);
 
+//		sleep(2);
+
+		voiceOutput("Ae for Truth or B for Dare..",1);
 		line_lcd(LINE1,"A: Truth");
 		line_lcd(LINE2,"B: Dare");
 		do
 		{
 			input = keyscan();
-			usleep(500000);
+			usleep(KEYPAD_DELAY);
 		}while(!(input== 'A' || input=='B'));
 // truth selected	
 		if(input == 'A')
 		{
 			line_lcd(LINE1,"So its Truth");
+			line_lcd(LINE2,"            ");
+			
+			voiceOutput("ha ha ha Its Truth",0);
+			
+			sprintf(str1,"Player %d you can take help from system by pressing Ae",temp_cp);
+			voiceOutput(str1,1);
 
 			if(pthread_create(&pid_lcd_question_gen,NULL,&lcd_question_gen,NULL)!=0)
 			{
 				perror("que gen:");
 				exit(0);
 			}
-	
+
+				
 			do{
 				input1 = keyscan();
-				usleep(500000);
+				usleep(KEYPAD_DELAY);
 			}while(!(input1== 'A' || input1=='B'));
 	
 			pthread_mutex_lock(&appMutex);
@@ -487,10 +530,19 @@ void game_begin()
 			{
 				do
 				{
-					line_lcd(LINE1,"Help for You:");
+					sprintf(str1,"Player %d here is your help ",temp_cp);
+					voiceOutput(str1,0);
 					
-					randomNum = random()%37 + 1;
+					line_lcd(LINE1,"Help for You:");
+					line_lcd(LINE2,"            ");
+					
 
+					sleep(1);
+					randomNum = random()%37 + 1;
+					sleep(1);
+
+
+					voiceOutput(truth[randomNum],0);
 					line_lcd(LINE2,truth[randomNum]);
 
 					line_lcd(LINE1,"A : next help");
@@ -499,7 +551,7 @@ void game_begin()
 					do
 					{
 						input3 = keyscan();
-						usleep(500000);
+						usleep(KEYPAD_DELAY);
 					}while(!(input3== 'A' || input3=='B'));
 				}while(input3 != 'B');
 			}
@@ -512,45 +564,63 @@ void game_begin()
 			lieDetectorAns = 0;
 			sprintf(str,"P%d R u lier?",temp_sp);
 			line_lcd(LINE1,str);
+			sprintf(str1,"Player %d don't be shy put your finger on lie detector..",temp_sp);
+			voiceOutput(str1,1);
 			line_lcd(LINE2,"Ask player to put his fingers on Lie Detector..!!");
 //			line_lcd(LINE2,"Ask player to put his fingers on Lie Detector..!!");
 			
+			sprintf(str1,"player %d ask question you have 10 seconds to ask",temp_cp);
+			voiceOutput(str1,1);
 			sprintf(str,"P%d ask que",temp_cp);
 			line_lcd(LINE1,str);
-			pthread_create(&pid_lcd_timer,NULL,&lcd_timer,20);
-			pthread_join(pid_lcd_timer,NULL);
-			line_lcd(LINE2,"time over");
+
 			sleep(2);
 
-			line_lcd(LINE1,"Lie Dtctr Strtd");				
-			pthread_create(&pid_lcd_timer,NULL,&lcd_timer,30);
+			pthread_create(&pid_lcd_timer,NULL,&lcd_timer,10);
+			pthread_join(pid_lcd_timer,NULL);
+			line_lcd(LINE2,"time over");
+			voiceOutput("Time over",1);
+			sleep(2);
 
+			voiceOutput("Lie Detector started for 30 seconds",1);			
+			line_lcd(LINE1,"Lie Dtctr Strtd");
+
+			sleep(1);
+
+			pthread_create(&pid_lcd_timer,NULL,&lcd_timer,30);
 			lieDetectorAns = lieDetector();
+			if(rndCnt%3 == 0)
+			{
+				if(lieDetectorAns != 'n')
+					lieDetectorAns = 't';
+			}
 
 			pthread_join(pid_lcd_timer,NULL);
 			line_lcd(LINE1,"Lie Dtctr Stop");
 			line_lcd(LINE2,"time over");
+			voiceOutput("Time over",1);
 			sleep(2);
 			
 			if(mode == 'B')
 			{
 				if(lieDetectorAns == 'n')
 				{
-//					printf("not connected\n");
 					line_lcd(LINE1,"Lie Dtctr Result");
-					line_lcd(LINE2,"Player did not wear lie detector..");
+					line_lcd(LINE2,"Player did not touch lie detector..");
+					sprintf(str1,"player %d you should touch lie detector",temp_sp);
+					voiceOutput(str1,0);
 				}
 				else if(lieDetectorAns == 't')
 				{
-//					printf("truth\n");
 					line_lcd(LINE1,"Lie Dtctr Result");
 					line_lcd(LINE2,"Player is honest");
+					voiceOutput("You are honest",0);
 				}
 				else if(lieDetectorAns == 'l')
 				{
-//					printf("lie\n");
 					line_lcd(LINE1,"Lie Dtctr Result");
 					line_lcd(LINE2,"Big Lie");
+					voiceOutput("Red Aleart It is lie",0);
 				}
 			}
 			else if(mode == 'A')
@@ -568,7 +638,6 @@ void game_begin()
 
 					if(lieDetectorAns == 'n')
 					{
-//						printf("not connected\n");
 						line_lcd(LINE1,"Lie Dtctr Result");
 						line_lcd(LINE2,"Player did not wear lie detector..");
 						break;
@@ -582,8 +651,6 @@ void game_begin()
 						strcat(str_phone,"good liar");
 					}
 //testing
-					printf("%s\n",str_phone);
-
 					system(str_phone);
 				}
 			}
@@ -594,12 +661,14 @@ void game_begin()
 //dare selected
 		else if(input == 'B')
 		{
+			voiceOutput("yes it is dare. press a for help",1);
 			line_lcd(LINE1,"You Dare to Dare");
+			line_lcd(LINE2,"                ");
 			pthread_create(&pid_lcd_question_gen,NULL,&lcd_question_gen,NULL);
 
 			do{
 				input1 = keyscan();
-				usleep(500000);
+				usleep(KEYPAD_DELAY);
 			}while(!(input1== 'A' || input1=='B'));
 
 			pthread_mutex_lock(&appMutex);
@@ -612,11 +681,19 @@ void game_begin()
 			{
 				do
 				{
+
+					sprintf(str1,"Player %d here is your help ",temp_cp);
+					voiceOutput(str1,1);
+					
 					line_lcd(LINE1,"Help for You:");
+					line_lcd(LINE2,"                ");
+					sleep(1);
 					
 					randomNum = random()%42 + 1;
 
-					line_lcd(LINE2,truth[randomNum]);
+					sleep(1);
+					voiceOutput(dare[randomNum],0);
+					line_lcd(LINE2,dare[randomNum]);
 
 					line_lcd(LINE1,"A : next help");
 					line_lcd(LINE2,"B : continue");
@@ -624,7 +701,7 @@ void game_begin()
 					do
 					{
 						input3 = keyscan();
-						usleep(500000);
+						usleep(KEYPAD_DELAY);
 					}while(!(input3== 'A' || input3=='B'));
 				}while(input3 != 'B');
 	
@@ -637,21 +714,24 @@ void game_begin()
 			{
 			}
 			input2 = 0;
+			sprintf(str1,"Player %d you should finish dare",temp_sp);
+			voiceOutput(str1,1);
 			sprintf(str,"P%d finish dare",temp_sp);
 			line_lcd(LINE1,str);
 			line_lcd(LINE2,"                ");
-			sleep(20);
+			sleep(10);
 		} // dare ending
 		else
 		{
 		}
 		
 		pthread_create(&pid_lcd_new_round,NULL,&lcd_new_round,NULL);
-
+		voiceOutput("Press Ae for next round");
+	
 		do
 		{
 			input2 = keyscan();
-			usleep(500000);
+			usleep(KEYPAD_DELAY);
 		}while(!(input2 == 'A' || input2=='D'));
 				
 		pthread_mutex_lock(&appMutex);
@@ -693,27 +773,22 @@ int main()
 		pthread_create(&pid_led_blink,NULL,&led_blink,NULL);
 		if(greetingFlag == 0)
 		{
-			greeting();
+//			greeting();
 			greetingFlag = 1;
 		}
+
 		mode = manOrauto();
 		noOfPlayers = getPlayers();
 
-		printf("no of players: %d %c\n",noOfPlayers,mode);
+//		printf("no of players: %d %c\n",noOfPlayers,mode);
 
 		switch(mode)
 		{
 			case 'A':
-//#ifdef TEST
-				printf("mode:%d\tplayers:%d\n",mode,noOfPlayers);
 				getPhoneNumbers();
-				printPh();
-//endif
+//				printPh();
 				break;
 			case 'B':
-//#ifdef TEST
-				printf("mode:%d\tplayers:%d\n",mode,noOfPlayers);
-//#endif
 				break;
 			default:
 				break;
@@ -730,11 +805,13 @@ int main()
 		do
 		{
 			input= keyscan();
-			usleep(500000);
+			usleep(KEYPAD_DELAY);
 		}while(!(input == 'A' || input == 'D'));
 	
 		if(input == 'D')
 		{
+			line_lcd(LINE1,"                ");
+			line_lcd(LINE2,"                ");
 			system("sudo poweroff");
 		}
 

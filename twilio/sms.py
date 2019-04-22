@@ -12,15 +12,15 @@ for i in range (2,len(sys.argv)):
 #print(msg)
 
 # Your Account SID from twilio.com/console
-account_sid = "AC2ba2b8d6e65379f59dc011d18ef989df"
+account_sid = "AC53db19b9bee199055205d0ad3003b3b7"
 # Your Auth Token from twilio.com/console
-auth_token  = "9cff220292a22eeb87b41d90e7bbb4df"
+auth_token  = "aa1019986354dddbddb360ecba58906f"
 
 client = Client(account_sid, auth_token)
 
 message = client.messages.create(
     to=receiver, 
-    from_="+17099100419",
+    from_="+17059900419",
     body=msg)
 
 print(message.sid)
