@@ -1,10 +1,15 @@
 #include"comm_driver.h"
 
+// to store received command
 char cmdRecv[10];
+
+// variable to store serial stream
 static int file;
 
+// Init function to initialize and open serial port ttyAMA0
 int uartInit()
 {
+	// open serial port ttyAMA0
 	if((file = open("/dev/ttyAMA0", O_RDWR | O_NOCTTY | O_NDELAY))<0)
 	{
 		perror("UART: Failed to open the device.\n");
@@ -19,12 +24,13 @@ int uartInit()
 	return 0;
 }
 
+// Close the serial port file
 void uartTerminate()
 {
 	close(file);
 }
 
-
+// Send message on UART
 int commMsgSend(char *msg)
 {
 	int count;
@@ -38,6 +44,7 @@ int commMsgSend(char *msg)
 	write(file, "\n", 1);
 }
 
+// Receive message from UART. returns address of received string
 char* commMsgRecv(void)
 {
 	int count = 0;
@@ -48,7 +55,7 @@ char* commMsgRecv(void)
 		if(read(file,&c,1)>0)
 		{
 			cmdRecv[count++] =c;
-			if(c=='\n')
+			if(c=='\n')   // end the string when new line character receives
 			{
 				cmdRecv[count-1]='\0';
 				break;
