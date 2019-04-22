@@ -102,13 +102,13 @@ pthread_mutex_t appMutex,appMutex1;
 
 void voiceOutput(char *str,char c)
 {
-	char voiceStr[400] = "pico2wave -w ./sound/temp.wav \"";
+	char voiceStr[400] = "pico2wave -w /home/pi/practice/sound/temp.wav \"";
 	strcat(voiceStr,str);
 	if(c == 0)
-		strcat(voiceStr," \" && aplay ./sound/temp.wav");
+		strcat(voiceStr," \" && aplay /home/pi/practice/sound/temp.wav");
 	else
 
-		strcat(voiceStr," \" && aplay ./sound/temp.wav &");
+		strcat(voiceStr," \" && aplay /home/pi/practice/sound/temp.wav &");
 	system(voiceStr);
 }
 
@@ -203,8 +203,22 @@ void getPhoneNumbers()
 			{
 				phoneNumbers[i][cnt] = keyscan();
 				usleep(KEYPAD_DELAY);
-			}while(!(phoneNumbers[i][cnt]>='0' && phoneNumbers[i][cnt]<='9'));
+				phoneNumbers[i][cnt+1] = 0;
+			}while(!((phoneNumbers[i][cnt]>='0' && phoneNumbers[i][cnt]<='9')||(phoneNumbers[i][cnt] == '*')));
+			if(phoneNumbers[i][cnt] == '*')
+			{
+				phoneNumbers[i][cnt-1] = 0;
+				phoneNumbers[i][cnt] = 0;
+				cnt--;
+				cnt--;
+			}
 		}
+
+		
+		sprintf(str1,"python /home/pi/practice/twilio/sms.py %s ",phoneNumbers[i]);
+		strcat(str1,"Your Number has been registered for SYS Truth or Dare game\n");
+		system(str1);
+
 	}
 
 }
@@ -224,7 +238,7 @@ void *lcd_spin_start(void *arg)
 		pthread_cond_wait(&rotorCond_start,&rotorMutex_rpm);
 	}
 	line_lcd(LINE2,"Spin Started...");
-	system("play -q sound/spinning.mp3 &");
+	system("play -q /home/pi/practice/sound/spinning.mp3 &");
 	rotorLedEnableFlag = 0;
 	rotorStopCnt = 0;
 	pthread_mutex_unlock(&rotorMutex_rpm);
@@ -244,7 +258,7 @@ void *lcd_spin_stop(void *arg)
 	system("pkill play");
 
 //	usleep(1000);
-	system("play -q sound/stop2.mp3");
+	system("play -q /home/pi/practice/sound/stop2.mp3");
 	pthread_mutex_unlock(&rotorMutex_rpm);
 }
 
@@ -569,20 +583,22 @@ void game_begin()
 			line_lcd(LINE2,"Ask player to put his fingers on Lie Detector..!!");
 //			line_lcd(LINE2,"Ask player to put his fingers on Lie Detector..!!");
 			
-			sprintf(str1,"player %d ask question you have 10 seconds to ask",temp_cp);
+//			sprintf(str1,"player %d ask question you have 10 seconds to ask",temp_cp);
+//			voiceOutput(str1,1);
+			sprintf(str1,"player %d please ask question",temp_cp);
 			voiceOutput(str1,1);
 			sprintf(str,"P%d ask que",temp_cp);
 			line_lcd(LINE1,str);
 
 			sleep(2);
 
-			pthread_create(&pid_lcd_timer,NULL,&lcd_timer,10);
-			pthread_join(pid_lcd_timer,NULL);
-			line_lcd(LINE2,"time over");
-			voiceOutput("Time over",1);
+//			pthread_create(&pid_lcd_timer,NULL,&lcd_timer,10);
+//			pthread_join(pid_lcd_timer,NULL);
+//			line_lcd(LINE2,"time over");
+//			voiceOutput("Time over",1);
 			sleep(2);
 
-			voiceOutput("Lie Detector started for 30 seconds",1);			
+			voiceOutput("Lie Detector started for 30 seconds",0);			
 			line_lcd(LINE1,"Lie Dtctr Strtd");
 
 			sleep(1);
@@ -634,7 +650,7 @@ void game_begin()
 					{
 						continue;
 					}
-					sprintf(str_phone,"python ./twilio/sms.py %s ",phoneNumbers[i]);
+					sprintf(str_phone,"python /home/pi/practice/twilio/sms.py %s ",phoneNumbers[i]);
 
 					if(lieDetectorAns == 'n')
 					{
@@ -644,11 +660,11 @@ void game_begin()
 					}
 					else if(lieDetectorAns == 't')
 					{
-						strcat(str_phone,"not liar");
+						strcat(str_phone,"Not Liar");
 					}
 					else if(lieDetectorAns == 'l')
 					{
-						strcat(str_phone,"good liar");
+						strcat(str_phone,"Good Liar");
 					}
 //testing
 					system(str_phone);
@@ -725,8 +741,8 @@ void game_begin()
 		{
 		}
 		
+		voiceOutput("Press Ae for next round",1);
 		pthread_create(&pid_lcd_new_round,NULL,&lcd_new_round,NULL);
-		voiceOutput("Press Ae for next round");
 	
 		do
 		{
